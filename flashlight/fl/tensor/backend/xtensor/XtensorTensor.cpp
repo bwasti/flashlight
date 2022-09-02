@@ -15,6 +15,12 @@
 
 namespace fl {
 
+#define X(D, T, extra) \
+  template <>          \
+  const dtype dtypeFrom<T>::value = dtype::D;
+MAP_TYPE(X, 0)
+#undef X
+
 XtensorTensor::XtensorTensor() {}
 
 XtensorTensor::XtensorTensor(
@@ -44,7 +50,7 @@ Tensor XtensorTensor::shallowCopy() {
 }
 
 TensorBackendType XtensorTensor::backendType() const {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  return TensorBackendType::Xtensor;
 }
 
 TensorBackend& XtensorTensor::backend() const {

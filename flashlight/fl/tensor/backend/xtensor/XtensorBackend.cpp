@@ -13,7 +13,7 @@
 #include "flashlight/fl/tensor/TensorBase.h"
 
 #define FL_XTENSOR_BACKEND_UNIMPLEMENTED \
-  throw std::invalid_argument(        \
+  throw std::invalid_argument(           \
       "XtensorBackend::" + std::string(__func__) + " - unimplemented.");
 
 namespace fl {
@@ -38,7 +38,7 @@ TensorBackendType XtensorBackend::backendType() const {
 void XtensorBackend::eval(const Tensor& /* tensor */) {
   // Launch computation for a given tensor. Can be a noop for non-async
   // runtimes.
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  // FL_XTENSOR_BACKEND_UNIMPLEMENTED;
   // TODO{bwasti}: call xt::eval here
 }
 
@@ -85,30 +85,31 @@ Tensor XtensorBackend::rand(const Shape& /* shape */, dtype /* type */) {
 
 /* --------------------------- Tensor Operators --------------------------- */
 
-
 /******************** Tensor Creation Functions ********************/
-#define FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(TYPE)                           \
-  Tensor XtensorBackend::fromScalar(TYPE value, const dtype type) {   \
-    switch (type) { \
-      case dtype::f32: \
+#define FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(TYPE)                  \
+  Tensor XtensorBackend::fromScalar(TYPE value, const dtype type) {      \
+    switch (type) {                                                      \
+      case dtype::f32:                                                   \
         return toTensor<XtensorTensor>(xt::xarray<float>{(float)value}); \
-      default: \
-        throw std::invalid_argument(                                               \
-            "XtensorBackend::fromScalar - not implemented for type " +                \
-            std::string(#TYPE));                                                   \
-    }\
-  }                                                                            \
-  Tensor XtensorBackend::full(                                                    \
-      const Shape& shape, TYPE value, const dtype type ) {    \
-    const auto& shape_ll = shape.get(); \
-    std::vector<size_t> shape_size_t(shape_ll.begin(), shape_ll.end()); \
-    switch (type) { \
-      case dtype::f32: \
-        return toTensor<XtensorTensor>(xt::xarray<float>{shape_size_t, (float)value}); \
-      default: \
-    throw std::invalid_argument(                                               \
-        "XtensorBackend::full - not implemented for type " + std::string(#TYPE)); \
-    } \
+      default:                                                           \
+        throw std::invalid_argument(                                     \
+            "XtensorBackend::fromScalar - not implemented for type " +   \
+            std::string(#TYPE));                                         \
+    }                                                                    \
+  }                                                                      \
+  Tensor XtensorBackend::full(                                           \
+      const Shape& shape, TYPE value, const dtype type) {                \
+    const auto& shape_ll = shape.get();                                  \
+    std::vector<size_t> shape_size_t(shape_ll.begin(), shape_ll.end());  \
+    switch (type) {                                                      \
+      case dtype::f32:                                                   \
+        return toTensor<XtensorTensor>(                                  \
+            xt::xarray<float>{shape_size_t, (float)value});              \
+      default:                                                           \
+        throw std::invalid_argument(                                     \
+            "XtensorBackend::full - not implemented for type " +         \
+            std::string(#TYPE));                                         \
+    }                                                                    \
   }
 FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(const double&);
 FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(const float&);
@@ -155,7 +156,9 @@ Tensor XtensorBackend::transpose(
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
-Tensor XtensorBackend::tile(const Tensor& /* tensor */, const Shape& /* shape */) {
+Tensor XtensorBackend::tile(
+    const Tensor& /* tensor */,
+    const Shape& /* shape */) {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
@@ -238,7 +241,9 @@ Tensor XtensorBackend::erf(const Tensor& /* tensor */) {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
-Tensor XtensorBackend::flip(const Tensor& /* tensor */, const unsigned /* dim */) {
+Tensor XtensorBackend::flip(
+    const Tensor& /* tensor */,
+    const unsigned /* dim */) {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
@@ -317,16 +322,16 @@ Tensor XtensorBackend::argsort(
 }
 
 /************************** Binary Operators ***************************/
-#define FL_AF_BINARY_OP_TYPE_DEF(FUNC, OP, TYPE)                            \
+#define FL_AF_BINARY_OP_TYPE_DEF(FUNC, OP, TYPE)                               \
   Tensor XtensorBackend::FUNC(const Tensor& /* a */, TYPE /* rhs */) {         \
-    throw std::runtime_error(                                               \
+    throw std::runtime_error(                                                  \
         "XtensorBackend::" + std::string(#FUNC) + " unimplemented for type " + \
-        std::string(#TYPE));                                                \
-  }                                                                         \
+        std::string(#TYPE));                                                   \
+  }                                                                            \
   Tensor XtensorBackend::FUNC(TYPE /* lhs */, const Tensor& /* a */) {         \
-    throw std::runtime_error(                                               \
+    throw std::runtime_error(                                                  \
         "XtensorBackend::" + std::string(#FUNC) + " unimplemented for type " + \
-        std::string(#TYPE));                                                \
+        std::string(#TYPE));                                                   \
   }
 
 #define FL_AF_BINARY_OP_LITERALS_DEF(FUNC, OP)                   \
@@ -346,12 +351,20 @@ Tensor XtensorBackend::argsort(
 
 // Operations on fl::Tensor call the respective operator overloads that are
 // already defined on af::arrays
-#define FL_AF_BINARY_OP_DEF(OP, FUNC)                                          \
-  Tensor XtensorBackend::FUNC(const Tensor& /* lhs */, const Tensor& /* rhs */) { \
-    throw std::runtime_error(                                                  \
-        "XtensorBackend::" + std::string(#FUNC) +                                 \
-        " unimplemented for two-Tensor inputs.");                              \
-  }                                                                            \
+#define FL_AF_BINARY_OP_DEF(OP, FUNC)                                       \
+  Tensor XtensorBackend::FUNC(const Tensor& lhs, const Tensor& rhs) {       \
+    return toTensor<XtensorTensor>(lhs.getAdapter<XtensorTensor>()          \
+                                       OP rhs.getAdapter<XtensorTensor>()); \
+  }                                                                         \
+  FL_AF_BINARY_OP_LITERALS_DEF(FUNC, OP);
+
+#define FL_AF_BINARY_OP_DEF_NO_IMPL(OP, FUNC)             \
+  Tensor XtensorBackend::FUNC(                            \
+      const Tensor& /* lhs */, const Tensor& /* rhs */) { \
+    throw std::runtime_error(                             \
+        "XtensorBackend::" + std::string(#FUNC) +         \
+        " unimplemented for two-Tensor inputs.");         \
+  }                                                       \
   FL_AF_BINARY_OP_LITERALS_DEF(FUNC, OP);
 
 // Definitions
@@ -362,29 +375,33 @@ FL_AF_BINARY_OP_DEF(+, add);
 FL_AF_BINARY_OP_DEF(-, sub);
 FL_AF_BINARY_OP_DEF(*, mul);
 FL_AF_BINARY_OP_DEF(/, div);
-FL_AF_BINARY_OP_DEF(==, eq);
-FL_AF_BINARY_OP_DEF(!=, neq);
 FL_AF_BINARY_OP_DEF(<, lessThan);
 FL_AF_BINARY_OP_DEF(<=, lessThanEqual);
 FL_AF_BINARY_OP_DEF(>, greaterThan);
 FL_AF_BINARY_OP_DEF(>=, greaterThanEqual);
-FL_AF_BINARY_OP_DEF(||, logicalOr);
-FL_AF_BINARY_OP_DEF(&&, logicalAnd);
-FL_AF_BINARY_OP_DEF(%, mod);
-FL_AF_BINARY_OP_DEF(&, bitwiseAnd);
-FL_AF_BINARY_OP_DEF(|, bitwiseOr);
-FL_AF_BINARY_OP_DEF(^, bitwiseXor);
-FL_AF_BINARY_OP_DEF(<<, lShift);
-FL_AF_BINARY_OP_DEF(>>, rShift);
+FL_AF_BINARY_OP_DEF_NO_IMPL(==, eq);
+FL_AF_BINARY_OP_DEF_NO_IMPL(!=, neq);
+FL_AF_BINARY_OP_DEF_NO_IMPL(||, logicalOr);
+FL_AF_BINARY_OP_DEF_NO_IMPL(&&, logicalAnd);
+FL_AF_BINARY_OP_DEF_NO_IMPL(%, mod);
+FL_AF_BINARY_OP_DEF_NO_IMPL(&, bitwiseAnd);
+FL_AF_BINARY_OP_DEF_NO_IMPL(|, bitwiseOr);
+FL_AF_BINARY_OP_DEF_NO_IMPL(^, bitwiseXor);
+FL_AF_BINARY_OP_DEF_NO_IMPL(<<, lShift);
+FL_AF_BINARY_OP_DEF_NO_IMPL(>>, rShift);
 #undef FL_AF_BINARY_OP_DEF
 #undef FL_AF_BINARY_OP_TYPE_DEF
 #undef FL_AF_BINARY_OP_LITERALS_DEF
 
-Tensor XtensorBackend::minimum(const Tensor& /* lhs */, const Tensor& /* rhs */) {
+Tensor XtensorBackend::minimum(
+    const Tensor& /* lhs */,
+    const Tensor& /* rhs */) {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
-Tensor XtensorBackend::maximum(const Tensor& /* lhs */, const Tensor& /* rhs */) {
+Tensor XtensorBackend::maximum(
+    const Tensor& /* lhs */,
+    const Tensor& /* rhs */) {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 

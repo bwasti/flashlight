@@ -7,24 +7,38 @@
 
 #pragma once
 
-#include "flashlight/fl/tensor/TensorAdapter.h"
 #include <xtensor/xarray.hpp>
+#include "flashlight/fl/tensor/TensorAdapter.h"
 
 namespace fl {
 
+#define MAP_TYPE(X, extra) \
+  X(b8, bool, extra)       \
+  X(s32, int32_t, extra)   \
+  X(u32, uint32_t, extra)  \
+  X(f32, float, extra)     \
+  X(f64, double, extra)
+
+template <typename T>
+struct dtypeFrom {
+  static const dtype value;
+};
+
 namespace detail {
 
-  class ErasedXarray {
-  };
+struct ErasedXarray {
+  virtual ~ErasedXarray() = default;
+};
 
-  template <typename T>
-  class TypedXarray : public ErasedXarray {
-    xt::xarray<T> array_;
-   public:
-    TypedXarray(const xt::xarray<T>& array) : array_(array) {}
-    TypedXarray(xt::xarray<T>&& array) : array_(std::move(array)) {}
-  };
-}
+template <typename T>
+struct TypedXarray : public ErasedXarray {
+  xt::xarray<T> array_;
+  TypedXarray(const xt::xarray<T>& array) : array_(array) {}
+  TypedXarray(xt::xarray<T>&& array) : array_(std::move(array)) {}
+  ~TypedXarray() {}
+};
+
+} // namespace detail
 
 /**
  * A stub Tensor implementation to make it easy to get started with the
@@ -36,24 +50,66 @@ class XtensorTensor : public TensorAdapterBase {
   // TODO{bwasti}: put xtensor state here. You'll need type erasure last I
   // checked since xtensor xarrays have compile type types
   //
-  // Would also recommend making this a variant/union type with an xexpression
+  // Would also recommend making this a variant/union type with an xarray
   // since that's the thing xtensor uses to think about intermediate JIT
   // expressions. The semantics are very similar to ArrayFire, so there's also
   // an xt::eval(...) which takes an xarray and does the same sort of
   // computation launching. eval() is on the XtensorBackend.
   //
-  // Since Xtensor doesn't have a notion of stream (afaik), you can basically return an
-  // empty trivial stream.
+  // Since Xtensor doesn't have a notion of stream (afaik), you can basically
+  // return an empty trivial stream.
 
  public:
-  detail::ErasedXarray array_;
+  std::shared_ptr<detail::ErasedXarray> array_;
+  fl::dtype type_;
   template <typename T>
-  XtensorTensor(const xt::xarray<T>& array) : array_(detail::TypedXarray<T>(array)) {}
-
-  template <typename T>
-  XtensorTensor(xt::xarray<T>&& array) : array_(detail::TypedXarray<T>(array)) {}
+  XtensorTensor(const xt::xarray<T>& array)
+      : array_(std::make_shared<detail::TypedXarray<T>>(array)) {
+    type_ = dtypeFrom<T>::value;
+  }
 
   XtensorTensor();
+
+  template <typename T>
+  const xt::xarray<T>& xarray() const {
+    return std::dynamic_pointer_cast<detail::TypedXarray<T>>(array_)->array_;
+  }
+
+#define X(D, T, OP) \
+  case dtype::D:    \
+    return XtensorTensor(xt::eval(xarray<T>() OP rhs.xarray<T>()));
+
+#define F(OP)                                            \
+  XtensorTensor operator OP(const XtensorTensor& rhs) {  \
+    switch (type_) {                                     \
+      MAP_TYPE(X, OP)                                    \
+      default:                                           \
+        throw std::runtime_error(                        \
+            "XtensorTensor doesn't support this type:" + \
+            dtypeToString(type_));                       \
+    }                                                    \
+  }
+
+  F(+)
+  F(-)
+  F(*)
+  F(/)
+  // F(==)
+  // F(!=)
+  F(<)
+  F(<=)
+  F(>)
+  F(>=)
+// F(||)
+// F(&&)
+// F(%)
+// F(&)
+// F(|)
+// F(^)
+// F(<<)
+// F(>>)
+#undef X
+#undef F
 
   /**
    * Construct a XtensorTensor using some data.
