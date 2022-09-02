@@ -6,6 +6,7 @@
  */
 
 #include "flashlight/fl/tensor/backend/xtensor/XtensorBackend.h"
+#include "flashlight/fl/tensor/backend/xtensor/XtensorTensor.h"
 
 #include <stdexcept>
 
@@ -84,17 +85,30 @@ Tensor XtensorBackend::rand(const Shape& /* shape */, dtype /* type */) {
 
 /* --------------------------- Tensor Operators --------------------------- */
 
+
 /******************** Tensor Creation Functions ********************/
 #define FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(TYPE)                           \
-  Tensor XtensorBackend::fromScalar(TYPE /* value */, const dtype /* type */) {   \
-    throw std::invalid_argument(                                               \
-        "XtensorBackend::fromScalar - not implemented for type " +                \
-        std::string(#TYPE));                                                   \
+  Tensor XtensorBackend::fromScalar(TYPE value, const dtype type) {   \
+    switch (type) { \
+      case dtype::f32: \
+        return toTensor<XtensorTensor>(xt::xarray<float>{(float)value}); \
+      default: \
+        throw std::invalid_argument(                                               \
+            "XtensorBackend::fromScalar - not implemented for type " +                \
+            std::string(#TYPE));                                                   \
+    }\
   }                                                                            \
   Tensor XtensorBackend::full(                                                    \
-      const Shape& /* shape */, TYPE /* value */, const dtype /* type */) {    \
+      const Shape& shape, TYPE value, const dtype type ) {    \
+    const auto& shape_ll = shape.get(); \
+    std::vector<size_t> shape_size_t(shape_ll.begin(), shape_ll.end()); \
+    switch (type) { \
+      case dtype::f32: \
+        return toTensor<XtensorTensor>(xt::xarray<float>{shape_size_t, (float)value}); \
+      default: \
     throw std::invalid_argument(                                               \
         "XtensorBackend::full - not implemented for type " + std::string(#TYPE)); \
+    } \
   }
 FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(const double&);
 FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(const float&);

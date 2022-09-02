@@ -47,14 +47,14 @@ include(InternalUtils)
 # ----------------------------- Configuration -----------------------------
 
 option(FL_BUILD_TESTS "Build tests" ON)
-option(FL_BUILD_EXAMPLES "Build examples" ON)
+option(FL_BUILD_EXAMPLES "Build examples" OFF)
 option(FL_BUILD_EXPERIMENTAL "Build internal experimental components" OFF)
 option(FL_BUILD_SCRIPTS "Build internal scripts for wav2letter++" OFF)
 option(FL_BUILD_RECIPES "Build recipes" ON)
 option(FL_BUILD_STANDALONE "Build standalone installation" ON)
 
-option(FL_LIBRARIES_USE_CUDA "Use CUDA in flashlight libraries build" ON)
-option(FL_LIBRARIES_USE_MKL "Use MKL in flashlight libraries build" ON)
+option(FL_LIBRARIES_USE_CUDA "Use CUDA in flashlight libraries build" OFF)
+option(FL_LIBRARIES_USE_MKL "Use MKL in flashlight libraries build" OFF)
 option(FL_LIBRARIES_BUILD_FOR_PYTHON "Build Python bindings" OFF)
 
 # External project configuration

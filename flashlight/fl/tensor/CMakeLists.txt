@@ -26,9 +26,9 @@ function(fl_set_backend_state)
 endfunction()
 
 # ]--------------- Backend Options and Selection
-option(FL_USE_ARRAYFIRE "Build ArrayFire tensor backend" ON)
+option(FL_USE_ARRAYFIRE "Build ArrayFire tensor backend" OFF)
 option(FL_USE_TENSOR_STUB "Build Stub tensor backend" ON)
-option(FL_USE_ONEDNN "Build OneDNN tensor backend" ON)
+option(FL_USE_ONEDNN "Build OneDNN tensor backend" OFF)
 option(FL_USE_XTENSOR "Build Xtensor tensor backend" ON)
 
 if (FL_USE_ARRAYFIRE)

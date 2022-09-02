@@ -8,8 +8,23 @@
 #pragma once
 
 #include "flashlight/fl/tensor/TensorAdapter.h"
+#include <xtensor/xarray.hpp>
 
 namespace fl {
+
+namespace detail {
+
+  class ErasedXarray {
+  };
+
+  template <typename T>
+  class TypedXarray : public ErasedXarray {
+    xt::xarray<T> array_;
+   public:
+    TypedXarray(const xt::xarray<T>& array) : array_(array) {}
+    TypedXarray(xt::xarray<T>&& array) : array_(std::move(array)) {}
+  };
+}
 
 /**
  * A stub Tensor implementation to make it easy to get started with the
@@ -29,7 +44,15 @@ class XtensorTensor : public TensorAdapterBase {
   //
   // Since Xtensor doesn't have a notion of stream (afaik), you can basically return an
   // empty trivial stream.
+
  public:
+  detail::ErasedXarray array_;
+  template <typename T>
+  XtensorTensor(const xt::xarray<T>& array) : array_(detail::TypedXarray<T>(array)) {}
+
+  template <typename T>
+  XtensorTensor(xt::xarray<T>&& array) : array_(detail::TypedXarray<T>(array)) {}
+
   XtensorTensor();
 
   /**
