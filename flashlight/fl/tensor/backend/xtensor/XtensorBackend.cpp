@@ -38,6 +38,7 @@ void XtensorBackend::eval(const Tensor& /* tensor */) {
   // Launch computation for a given tensor. Can be a noop for non-async
   // runtimes.
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  // TODO{bwasti}: call xt::eval here
 }
 
 bool XtensorBackend::supportsDataType(const fl::dtype& /* dtype */) const {

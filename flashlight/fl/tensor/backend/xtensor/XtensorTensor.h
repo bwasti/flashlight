@@ -18,6 +18,17 @@ namespace fl {
  * This stub can be copied, renamed, and implemented as needed.
  */
 class XtensorTensor : public TensorAdapterBase {
+  // TODO{bwasti}: put xtensor state here. You'll need type erasure last I
+  // checked since xtensor xarrays have compile type types
+  //
+  // Would also recommend making this a variant/union type with an xexpression
+  // since that's the thing xtensor uses to think about intermediate JIT
+  // expressions. The semantics are very similar to ArrayFire, so there's also
+  // an xt::eval(...) which takes an xarray and does the same sort of
+  // computation launching. eval() is on the XtensorBackend.
+  //
+  // Since Xtensor doesn't have a notion of stream (afaik), you can basically return an
+  // empty trivial stream.
  public:
   XtensorTensor();
 

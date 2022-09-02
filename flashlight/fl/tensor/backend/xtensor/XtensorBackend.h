@@ -17,6 +17,13 @@ namespace fl {
  * Xtensor backend, have fun
  */
 class XtensorBackend : public TensorBackend {
+  // TODO{bwasti}: put any global state related to xtensor backend stuff here.
+  // This is a singleton (you can relax that if you really need t/if you have a
+  // good reason to -- you'll need to change XtensorTensor::backend() if you do,
+  // but it shouldn't be necessary.
+  //
+  // It doesn't seem like xtensor really has any notion of a stream or
+  // synchronization; you may not even need to store any state here.
  public:
   XtensorBackend();
 
