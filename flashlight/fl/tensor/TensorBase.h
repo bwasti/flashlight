@@ -27,7 +27,7 @@ namespace fl {
  */
 
 /// Enum for various tensor backends.
-enum class TensorBackendType { Stub, ArrayFire, OneDnn };
+enum class TensorBackendType { Stub, ArrayFire, OneDnn, Xtensor };
 
 // See TensorAdapter.h
 class TensorAdapterBase;
@@ -565,8 +565,7 @@ class Tensor {
   std::ostream& operator<<(std::ostream& ostr) const;
 
   /******************** Assignment Operators ********************/
-#define ASSIGN_TENSOR_OP(OP)             \
-  Tensor& OP(const Tensor& val);
+#define ASSIGN_TENSOR_OP(OP) Tensor& OP(const Tensor& val);
 #define ASSIGN_SCALAR_OP(OP)             \
   Tensor& OP(const double& val);         \
   Tensor& OP(const float& val);          \
@@ -581,8 +580,8 @@ class Tensor {
   Tensor& OP(const unsigned long& val);  \
   Tensor& OP(const long long& val);      \
   Tensor& OP(const unsigned long long& val);
-#define ASSIGN_OP(OP)                    \
-  ASSIGN_TENSOR_OP(OP);                  \
+#define ASSIGN_OP(OP)   \
+  ASSIGN_TENSOR_OP(OP); \
   ASSIGN_SCALAR_OP(OP);
 
   ASSIGN_SCALAR_OP(operator=);

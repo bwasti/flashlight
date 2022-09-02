@@ -10,6 +10,9 @@
 #if FL_USE_ARRAYFIRE
   #include "flashlight/fl/tensor/backend/af/ArrayFireTensor.h"
 #endif
+#if FL_USE_XTENSOR
+  #include "flashlight/fl/tensor/backend/xtensor/XtensorTensor.h"
+#endif
 #if FL_USE_TENSOR_STUB
   #include "flashlight/fl/tensor/backend/stub/StubTensor.h"
 #endif
@@ -22,7 +25,9 @@ namespace fl {
  */
 using DefaultTensorType_t = fl::ArrayFireTensor;
 #else
-  #if FL_USE_TENSOR_STUB
+  #if FL_USE_XTENSOR
+using DefaultTensorType_t = fl::XtensorTensor;
+  #elif FL_USE_TENSOR_STUB
 using DefaultTensorType_t = fl::StubTensor;
   #endif
 #endif

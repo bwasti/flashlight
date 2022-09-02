@@ -19,7 +19,7 @@
  * The compile time value which will be true if the default backend is
  * available.
  */
-#define FL_DEFAULT_BACKEND_COMPILE_FLAG FL_USE_ARRAYFIRE
+#define FL_DEFAULT_BACKEND_COMPILE_FLAG FL_USE_XTENSOR
 
 namespace fl {
 namespace detail {
