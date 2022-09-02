@@ -35,11 +35,22 @@ TensorBackendType XtensorBackend::backendType() const {
 
 /* -------------------------- Compute Functions -------------------------- */
 
-void XtensorBackend::eval(const Tensor& /* tensor */) {
+void XtensorBackend::eval(const Tensor& tensor) {
   // Launch computation for a given tensor. Can be a noop for non-async
   // runtimes.
-  // FL_XTENSOR_BACKEND_UNIMPLEMENTED;
-  // TODO{bwasti}: call xt::eval here
+  const auto& xtensor = tensor.getAdapter<XtensorTensor>();
+#define X(D, T, extra)             \
+  case dtype::D:                   \
+    xt::eval(xtensor.xarray<T>()); \
+    break;
+  switch (xtensor.type()) {
+    MAP_TYPE(X, 0)
+    default:
+      throw std::runtime_error(
+          "XtensorTensor doesn't support this type:" +
+          dtypeToString(xtensor.type()));
+  }
+#undef X
 }
 
 bool XtensorBackend::supportsDataType(const fl::dtype& /* dtype */) const {

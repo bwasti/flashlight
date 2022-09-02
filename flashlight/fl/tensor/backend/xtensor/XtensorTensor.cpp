@@ -61,8 +61,12 @@ const Shape& XtensorTensor::shape() {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
+fl::dtype XtensorTensor::type() const {
+  return type_;
+}
+
 fl::dtype XtensorTensor::type() {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  return type_;
 }
 
 bool XtensorTensor::isSparse() {
@@ -136,7 +140,15 @@ void* XtensorTensor::getContext() {
 }
 
 std::string XtensorTensor::toString() {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  std::stringstream buffer;
+  switch (type_) {
+    case dtype::f32:
+      buffer << xarray<float>().data()[0];
+      break;
+    default:
+      break;
+  }
+  return buffer.str();
 }
 
 std::ostream& XtensorTensor::operator<<(std::ostream& /* ostr */) {

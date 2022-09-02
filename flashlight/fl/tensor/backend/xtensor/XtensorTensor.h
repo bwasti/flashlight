@@ -8,6 +8,7 @@
 #pragma once
 
 #include <xtensor/xarray.hpp>
+#include <xtensor/xexpression.hpp>
 #include "flashlight/fl/tensor/TensorAdapter.h"
 
 namespace fl {
@@ -32,9 +33,9 @@ struct ErasedXarray {
 
 template <typename T>
 struct TypedXarray : public ErasedXarray {
-  xt::xarray<T> array_;
-  TypedXarray(const xt::xarray<T>& array) : array_(array) {}
-  TypedXarray(xt::xarray<T>&& array) : array_(std::move(array)) {}
+  xt::xshared_expression<xt::xarray<T>> array_;
+  TypedXarray(xt::xarray<T>&& array)
+      : array_(xt::make_xshared(std::move(array))) {}
   ~TypedXarray() {}
 };
 
@@ -47,9 +48,6 @@ struct TypedXarray : public ErasedXarray {
  * This stub can be copied, renamed, and implemented as needed.
  */
 class XtensorTensor : public TensorAdapterBase {
-  // TODO{bwasti}: put xtensor state here. You'll need type erasure last I
-  // checked since xtensor xarrays have compile type types
-  //
   // Would also recommend making this a variant/union type with an xarray
   // since that's the thing xtensor uses to think about intermediate JIT
   // expressions. The semantics are very similar to ArrayFire, so there's also
@@ -63,15 +61,15 @@ class XtensorTensor : public TensorAdapterBase {
   std::shared_ptr<detail::ErasedXarray> array_;
   fl::dtype type_;
   template <typename T>
-  XtensorTensor(const xt::xarray<T>& array)
-      : array_(std::make_shared<detail::TypedXarray<T>>(array)) {
+  XtensorTensor(xt::xarray<T>&& array)
+      : array_(std::make_shared<detail::TypedXarray<T>>(std::move(array))) {
     type_ = dtypeFrom<T>::value;
   }
 
   XtensorTensor();
 
   template <typename T>
-  const xt::xarray<T>& xarray() const {
+  const xt::xshared_expression<xt::xarray<T>>& xarray() const {
     return std::dynamic_pointer_cast<detail::TypedXarray<T>>(array_)->array_;
   }
 
@@ -94,12 +92,12 @@ class XtensorTensor : public TensorAdapterBase {
   F(-)
   F(*)
   F(/)
-  // F(==)
-  // F(!=)
   F(<)
   F(<=)
   F(>)
   F(>=)
+// F(==)
+// F(!=)
 // F(||)
 // F(&&)
 // F(%)
@@ -141,6 +139,7 @@ class XtensorTensor : public TensorAdapterBase {
   Tensor copy() override;
   Tensor shallowCopy() override;
   const Shape& shape() override;
+  dtype type() const;
   dtype type() override;
   bool isSparse() override;
   Location location() override;
