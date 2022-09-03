@@ -6,10 +6,11 @@ if(NOT xtensor_FOUND)
   find_package(xtensor CONFIG REQUIRED)
 endif()
 
-target_link_libraries(
+# xtensor is header only, if we don't do this it confuses upstream deps
+target_include_directories(
   flashlight
   PRIVATE
-  xtensor
+  $<TARGET_PROPERTY:xtensor,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 target_sources(
