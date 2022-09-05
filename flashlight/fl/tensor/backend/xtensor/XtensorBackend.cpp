@@ -8,6 +8,8 @@
 #include "flashlight/fl/tensor/backend/xtensor/XtensorBackend.h"
 #include "flashlight/fl/tensor/backend/xtensor/XtensorTensor.h"
 
+#include "xtensor/xrandom.hpp"
+
 #include <stdexcept>
 
 #include "flashlight/fl/tensor/TensorBase.h"
@@ -86,12 +88,24 @@ void XtensorBackend::setSeed(const int /* seed */) {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
-Tensor XtensorBackend::randn(const Shape& /* shape */, dtype /* type */) {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+Tensor XtensorBackend::randn(const Shape& shape, dtype type) {
+  const auto& flshape = shape.get();
+  std::vector<std::size_t> xshape(flshape.begin(), flshape.end());
+
+  GENERIC_TYPE(type, {
+      return toTensor<XtensorTensor>(xt::random::randn<array_type>(xshape));
+  })
+  return toTensor<XtensorTensor>();
 }
 
-Tensor XtensorBackend::rand(const Shape& /* shape */, dtype /* type */) {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+Tensor XtensorBackend::rand(const Shape& shape, dtype type) {
+  const auto& flshape = shape.get();
+  std::vector<std::size_t> xshape(flshape.begin(), flshape.end());
+
+  GENERIC_TYPE(type, {
+      return toTensor<XtensorTensor>(xt::random::rand<array_type>(xshape));
+  })
+  return toTensor<XtensorTensor>();
 }
 
 /* --------------------------- Tensor Operators --------------------------- */
@@ -136,8 +150,10 @@ FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(const bool&);
 FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(const short&);
 FL_XTENSOR_BACKEND_CREATE_FUN_LITERAL_DEF(const unsigned short&);
 
-Tensor XtensorBackend::identity(const Dim /* dim */, const dtype /* type */) {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+Tensor XtensorBackend::identity(const Dim dim, const dtype type) {
+  GENERIC_TYPE(type, {
+      return toTensor<XtensorTensor>(xt::eye<array_type>(dim));
+  });
 }
 
 Tensor XtensorBackend::arange(
@@ -465,10 +481,13 @@ void XtensorBackend::max(
 }
 
 Tensor XtensorBackend::sum(
-    const Tensor& /* input */,
-    const std::vector<int>& /* axes */,
-    const bool /* keepDims */) {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+    const Tensor& input,
+    const std::vector<int>& axes,
+    const bool keepDims) {
+  GENERIC_TYPE(input.type(), {
+    const auto& array = input.getAdapter<XtensorTensor>().xarray<array_type>();
+    return toTensor<XtensorTensor>(xt::sum(array, axes));
+  });
 }
 
 Tensor XtensorBackend::cumsum(

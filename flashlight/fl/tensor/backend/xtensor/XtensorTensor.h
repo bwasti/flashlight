@@ -20,6 +20,36 @@ namespace fl {
   X(f32, float, extra)     \
   X(f64, double, extra)
 
+
+#define FUNC_WRAP_XARRAY(D, T, func) \
+  case dtype::D: {\
+    using array_type = T; \
+    const auto& array = xarray<array_type>(); \
+    func\
+    break; \
+  }
+#define GENERIC_XARRAY(type, func) do { \
+  switch(type) { \
+    MAP_TYPE(FUNC_WRAP_XARRAY, func) \
+    default: \
+      break; \
+  } \
+} while (0);
+
+#define FUNC_WRAP_TYPE(D, T, func) \
+  case dtype::D: {\
+    using array_type = T; \
+    func\
+    break; \
+  }
+#define GENERIC_TYPE(type, func) do { \
+  switch(type) { \
+    MAP_TYPE(FUNC_WRAP_TYPE, func) \
+    default: \
+      break; \
+  } \
+} while (0);
+
 template <typename T>
 struct dtypeFrom {
   static const dtype value;
@@ -60,10 +90,31 @@ class XtensorTensor : public TensorAdapterBase {
  public:
   std::shared_ptr<detail::ErasedXarray> array_;
   fl::dtype type_;
+  fl::Shape shape_;
   template <typename T>
   XtensorTensor(xt::xarray<T>&& array)
       : array_(std::make_shared<detail::TypedXarray<T>>(std::move(array))) {
     type_ = dtypeFrom<T>::value;
+  }
+  template <typename F, typename R, typename S>
+  XtensorTensor(xt::xgenerator<F, R, S>&& array)
+      : array_(std::make_shared<detail::TypedXarray<R>>(std::move(array))) {
+    type_ = dtypeFrom<R>::value;
+  }
+  template <typename T>
+  XtensorTensor(const xt::xshared_expression<xt::xarray<T>>& array)
+      : array_(std::make_shared<detail::TypedXarray<T>>(array)) {
+    type_ = dtypeFrom<T>::value;
+  }
+  template <typename F, typename ...CT>
+  XtensorTensor(xt::xfunction<F, CT...>&& array)
+      : array_(std::make_shared<detail::TypedXarray<typename xt::xfunction<F, CT...>::value_type>>(std::move(array))) {
+    type_ = dtypeFrom<typename xt::xfunction<F, CT...>::value_type>::value;
+  }
+  template <typename F, typename CT, typename X, typename O>
+  XtensorTensor(xt::xreducer<F, CT, X, O>&& array)
+      : array_(std::make_shared<detail::TypedXarray<typename xt::xreducer<F, CT, X, O>::value_type>>(std::move(array))) {
+    type_ = dtypeFrom<typename xt::xreducer<F, CT, X, O>::value_type>::value;
   }
 
   XtensorTensor();
@@ -75,7 +126,7 @@ class XtensorTensor : public TensorAdapterBase {
 
 #define X(D, T, OP) \
   case dtype::D:    \
-    return XtensorTensor(xt::eval(xarray<T>() OP rhs.xarray<T>()));
+    return XtensorTensor(xarray<T>() OP rhs.xarray<T>());
 
 #define F(OP)                                            \
   XtensorTensor operator OP(const XtensorTensor& rhs) {  \

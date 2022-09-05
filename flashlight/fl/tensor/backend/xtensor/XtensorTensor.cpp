@@ -21,7 +21,13 @@ namespace fl {
 MAP_TYPE(X, 0)
 #undef X
 
-XtensorTensor::XtensorTensor() {}
+XtensorTensor::XtensorTensor() {
+  GENERIC_XARRAY(type_, {
+    const auto& xshape = array.shape();
+    std::vector<Dim> flshape(xshape.begin(), xshape.end());
+    shape_ = Shape(flshape);
+  })
+}
 
 XtensorTensor::XtensorTensor(
     const Shape& /* shape */,
@@ -38,7 +44,9 @@ XtensorTensor::XtensorTensor(
     StorageType /* storageType */) {}
 
 std::unique_ptr<TensorAdapterBase> XtensorTensor::clone() const {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  GENERIC_XARRAY(type_, {
+    return std::unique_ptr<XtensorTensor>(new XtensorTensor(array));
+  })
 }
 
 Tensor XtensorTensor::copy() {
@@ -58,7 +66,7 @@ TensorBackend& XtensorTensor::backend() const {
 }
 
 const Shape& XtensorTensor::shape() {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  return shape_;
 }
 
 fl::dtype XtensorTensor::type() const {
@@ -77,16 +85,20 @@ Location XtensorTensor::location() {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
-void XtensorTensor::scalar(void* /* out */) {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+void XtensorTensor::scalar(void* out) {
+  GENERIC_XARRAY(type_, {
+    memcpy(out, array.data(), sizeof(array_type));
+  });
 }
 
 void XtensorTensor::device(void** /* out */) {
   FL_XTENSOR_BACKEND_UNIMPLEMENTED;
 }
 
-void XtensorTensor::host(void* /* out */) {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+void XtensorTensor::host(void* out) {
+  GENERIC_XARRAY(type_, {
+    memcpy(out, array.data(), array.size() * sizeof(array_type));
+  })
 }
 
 void XtensorTensor::unlock() {
@@ -126,7 +138,7 @@ Tensor XtensorTensor::flat(const Index& /* idx */) const {
 }
 
 Tensor XtensorTensor::asContiguousTensor() {
-  FL_XTENSOR_BACKEND_UNIMPLEMENTED;
+  return toTensor<XtensorTensor>(*this);
 }
 
 void XtensorTensor::setContext(void* /* context */) {
