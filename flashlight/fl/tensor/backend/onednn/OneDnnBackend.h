@@ -14,7 +14,11 @@
 
 #include "flashlight/fl/tensor/backend/onednn/OneDnnCPUStream.h"
 
+#if FL_USE_MKL_RNG
 #include <mkl_vsl.h>
+#else
+#include <random>
+#endif // FL_USE_MKL_RNG
 
 namespace fl {
 
@@ -24,7 +28,12 @@ namespace fl {
 class OneDnnBackend : public TensorBackend {
   dnnl::engine engine_;
   std::shared_ptr<OneDnnCPUStream> stream_;
+#if FL_USE_MKL_RNG
   VSLStreamStatePtr randStream_;
+#else
+  using RandEngineType = std::linear_congruential_engine<uint_fast32_t, 1132489760, 0, 1u<<31>;
+  RandEngineType randEngine_;
+#endif // FL_USE_MKL_RNG
 
   // Apply the given OneDNN binary operation to the tensors
   Tensor applyBinop(

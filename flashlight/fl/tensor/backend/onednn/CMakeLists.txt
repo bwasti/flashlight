@@ -12,7 +12,7 @@ else()
 endif()
 
 # ----------------------------- Sources -----------------------------
-find_package(MKL REQUIRED)
+#find_package(MKL REQUIRED)
 
 target_sources(
   flashlight
@@ -23,15 +23,15 @@ target_sources(
   ${CMAKE_CURRENT_LIST_DIR}/Utils.cpp
 )
 
-target_include_directories(
-  flashlight
-  PUBLIC
-  ${MKL_INCLUDE_DIR}
-)
+#target_include_directories(
+#  flashlight
+#  PUBLIC
+#  ${MKL_INCLUDE_DIR}
+#)
 
 target_link_libraries(
   flashlight
   PUBLIC
   DNNL::dnnl
-  ${MKL_LIBRARIES}
+  #${MKL_LIBRARIES}
 )

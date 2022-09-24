@@ -68,7 +68,7 @@ set(FL_BUILD_BINARY_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 # ]--- Backend Options
 # TODO: change these to FL_BACKEND_* to be consistent with preproc
 option(FL_USE_CUDA   "Build CUDA support for Flashlight backends" OFF)
-option(FL_USE_CPU    "Build CPU support for Flashlight backends"  OFF)
+option(FL_USE_CPU    "Build CPU support for Flashlight backends"  ON)
 option(FL_USE_OPENCL "Build OpenCL support for Flashlight backends" OFF)
 
 # -------------------- Locate Backend-specific Dependencies --------------------
