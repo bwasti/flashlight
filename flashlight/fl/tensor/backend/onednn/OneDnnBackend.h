@@ -31,7 +31,8 @@ class OneDnnBackend : public TensorBackend {
 #if FL_USE_MKL_RNG
   VSLStreamStatePtr randStream_;
 #else
-  using RandEngineType = std::linear_congruential_engine<uint_fast32_t, 1132489760, 0, 1u<<31>;
+  // TODO: this is broken std::linear_congruential_engine<uint_fast32_t, 1132489760, 0, 1u<<31>;
+  using RandEngineType = std::mt19937;
   RandEngineType randEngine_;
 #endif // FL_USE_MKL_RNG
 

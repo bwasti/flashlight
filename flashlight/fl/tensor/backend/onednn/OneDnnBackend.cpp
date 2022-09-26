@@ -604,8 +604,15 @@ Tensor OneDnnBackend::fullWithType(const Shape& shape, V value, const dtype type
   }
 }
 
-Tensor OneDnnBackend::identity(const Dim /* dim */, const dtype /* type */) {
-  FL_ONEDNN_BACKEND_UNIMPLEMENTED;
+Tensor OneDnnBackend::identity(const Dim dim, const dtype type) {
+  const Shape shape{dim, dim};
+  std::vector<float> data(shape.elements(), 0);
+  auto* data_ptr = data.data();
+  for (decltype(data.size()) i = 0; i < data.size(); i += dim + 1) {
+    data_ptr[i] = 1;
+  }
+  return toTensor<OneDnnTensor>(shape, dtype::f32, data.data(), Location::Host)
+      .astype(type);
 }
 
 Tensor OneDnnBackend::arange(
