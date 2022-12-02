@@ -8,6 +8,14 @@ if (NOT DNNL_FOUND AND FL_USE_ONEDNN)
   message(FATAL_ERROR
     "oneDNN required to build oneDNN backend: oneDNN was not found")
 else()
+  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    find_library(ACCELERATE_FRAMEWORK Accelerate REQUIRED)
+    target_link_libraries(
+      flashlight
+      PUBLIC
+      ${ACCELERATE_FRAMEWORK}
+      )
+  endif()
   message(STATUS "oneDNN found")
 endif()
 
